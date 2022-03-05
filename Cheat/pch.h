@@ -4,4 +4,16 @@
 // 但是，如果此处列出的文件中的任何一个在生成之间有更新，它们全部都将被重新编译。
 // 请勿在此处添加要频繁更新的文件，这将使得性能优势无效。
 #pragma once
+#define _CRT_SECURE_NO_WARNINGS
 #include <Windows.h>
+#include <thread>
+
+//D3D
+#include <d3d11.h>
+#pragma comment(lib,"d3d11.lib")
+
+#include "../ImGui/imgui.h"
+#include "../ImGui/imgui_impl_dx11.h"
+#include "../ImGui/imgui_impl_win32.h"
+
+#include "../Common/framework.h"

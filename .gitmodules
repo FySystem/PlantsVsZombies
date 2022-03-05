@@ -1,0 +1,6 @@
+[submodule "Common"]
+	path = Common
+	url = https://gitee.com/Cef2000/Common.git
+[submodule "util"]
+	path = util
+	url = https://gitee.com/Cef2000/Util.git

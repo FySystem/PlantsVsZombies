@@ -9,7 +9,11 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hModule);
+        Global::get()->hDllInst = hModule;
+        DisableThreadLibraryCalls(Global::get()->hDllInst);
+
+        //绘制菜单
+        Menu::get()->Execute();
         break;
     case DLL_PROCESS_DETACH:
 
