@@ -21,8 +21,8 @@ void Menu::Execute()
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT Menu::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-		return true;
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))return true;
+
 	switch (msg)
 	{
 	case WM_SIZE:
@@ -60,12 +60,12 @@ void Menu::CreateMenu()
 		ExitProcess(1);
 	}
 
+	//显示菜单
+	ShowWindow(hWindow, SW_SHOW);
+	UpdateWindow(hWindow);
+
 	//透明窗口
 	SetLayeredWindowAttributes(hWindow, RGB(0, 0, 0), 0, ULW_COLORKEY);
-
-	//显示菜单
-	ShowWindow(hWindow, SW_SHOWDEFAULT);
-	UpdateWindow(hWindow);
 
 	//ImGui初始化
 	ImGuiInit();
@@ -80,7 +80,8 @@ void Menu::CreateMenu()
 			DispatchMessage(&msg);
 		}
 		rect.GetRect();
-		if (GetForegroundWindow() == game_hwnd)
+		HWND ForegroundWindow = GetForegroundWindow();
+		if (ForegroundWindow == game_hwnd || ForegroundWindow == hWindow)
 		{
 			SetWindowPos(hWindow, HWND_TOPMOST,
 				rect.x, rect.y, rect.width, rect.height,
@@ -114,7 +115,13 @@ void Menu::CreateMenu()
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		g_pSwapChain->Present(1, 0);
 	}
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 
+	CleanupDeviceD3D();
+	DestroyWindow(hWindow);
+	UnregisterClass(wc.lpszClassName, wc.hInstance);
 }
 
 void Menu::WindowInit()
@@ -126,21 +133,24 @@ void Menu::WindowInit()
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = GetModuleHandle(nullptr);
-	wc.hIcon = nullptr;
+	wc.hIcon = wc.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);;
 	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.hbrBackground = nullptr;
 	wc.lpszMenuName = " ";
 	wc.lpszClassName = " ";
-	wc.hIconSm = nullptr;
 
 	RegisterClassEx(&wc);
 
 	//获得大小
 	rect.GetRect();
 
+	// WS_EX_LAYERED 可使用SetLayeredWindowAttributes函数
+	// WS_EX_TRANSPARENT 鼠标会穿透 (这个开了可能导致菜单无法移动)
+	// WS_EX_TOPMOST 窗口置顶
+	// WS_EX_TOOLWINDOW 任务栏不显示
 	//打开窗口
 	hWindow = CreateWindowEx(
-		WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
+		WS_EX_LAYERED | WS_EX_TOPMOST,
 		wc.lpszClassName, " ", 
 		WS_POPUP | WS_VISIBLE,
 		rect.x, rect.y,rect.width,rect.height,
@@ -183,7 +193,7 @@ bool Menu::CreateDeviceD3D(HWND hWnd)
 	constexpr D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
 	if (D3D11CreateDeviceAndSwapChain(
 		nullptr, D3D_DRIVER_TYPE_HARDWARE, 
-		nullptr, 0, featureLevelArray, 
+		nullptr, 0, featureLevelArray,
 		2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, 
 		&featureLevel, &g_pd3dDeviceContext) != S_OK
 		)return false;
