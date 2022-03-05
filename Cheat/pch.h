@@ -9,6 +9,8 @@
 #include <functional>
 #include <dwmapi.h>
 #include <thread>
+#include <set>
+#include <vector>
 
 //D3D
 #include <d3d11.h>

@@ -83,10 +83,40 @@ void Menu::CreateMenu()
 	MainDraw();
 }
 
+uintptr_t temp = 0;
+uintptr_t JmpBack = 0x0052D9E8; //后台运行跳转回去地址
+__declspec(naked)
+void GetZombieAddr() {
+	
+	__asm {
+		fld dword ptr[ecx + 0x2C]
+		push edi
+		fisub[ecx + 0x08]
+
+		mov temp, ecx
+
+		jmp JmpBack
+	}
+}
+float fTest;
+void Test()
+{
+	if (ImGui::BeginChild(u8"透视", ImVec2(0, 0), true)) {
+		ImGui::SliderFloat(u8"Test",0,1000,fTest);
+	}ImGui::EndChild();
+}
+
 void Menu::MainDraw()
 {
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
+
+	BYTE oldGetZombieAddress[7];
+	BYTE newGetZombieAddress[7];
+	std::set<uintptr_t> Zomibe;
+
+	//drawMenu::get()->visuals_tab_window = Test;
+
 	while (msg.message != WM_QUIT)
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -105,12 +135,37 @@ void Menu::MainDraw()
 
 		drawMenu::get()->Execute();
 
+		//测试
+		memcpy(&oldGetZombieAddress, LPVOID(0x0052D9E1), sizeof(oldGetZombieAddress));
+		newGetZombieAddress[0] = '\xE9';
+		*(DWORD*)(newGetZombieAddress + 1) = (DWORD)GetZombieAddr - (DWORD)0x0052D9E1 - 5;
+		newGetZombieAddress[5] = '\x90';
+		newGetZombieAddress[6] = '\x90';
+
+		//测试写入
+		WriteProcessMemory(
+			GetCurrentProcess(),
+			reinterpret_cast<LPVOID>(0x0052D9E1), newGetZombieAddress, 
+			sizeof(newGetZombieAddress), nullptr
+		);
+
+		//if (temp)
+		//{
+		//	Zomibe.insert(temp);
+		//	//Global::get()->Zombie.push_back(temp);
+		//}
+
+		//for (const auto& it : Zomibe)
+		//{
+		//	Memory::Write<float>(it + 0x2C, 800);
+		//}
+
+
 		ImGui::Render();
 		g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
 		ImVec4 clearColor = ImGui::ColorConvertU32ToFloat4(ImColor(0, 0, 0, 0));
 		g_pd3dDeviceContext->ClearRenderTargetView(
-			g_mainRenderTargetView,
-			reinterpret_cast<const float*>(&clearColor)
+			g_mainRenderTargetView,reinterpret_cast<const float*>(&clearColor)
 		);
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		g_pSwapChain->Present(1, 0);
