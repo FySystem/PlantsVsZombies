@@ -7,7 +7,7 @@ void drawRect::GetRect()
 	GetWindowRect(Menu::get()->game_hwnd, rect.get());
 
 	x = rect->left;
-	y = rect->top;
+	y = rect->top + 25;
 
 	width = rect->right - rect->left;
 	height = rect->bottom - rect->top;
@@ -67,6 +67,14 @@ void Menu::CreateMenu()
 	//透明窗口
 	SetLayeredWindowAttributes(hWindow, RGB(0, 0, 0), 0, ULW_COLORKEY);
 
+	// imgui窗口透明，也可以解决D3D绘制锯齿
+	DWM_BLURBEHIND bb = { 0 };
+	HRGN hRgn = CreateRectRgn(0, 0, -1, -1);
+	bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
+	bb.hRgnBlur = hRgn;
+	bb.fEnable = TRUE;
+	DwmEnableBlurBehindWindow(hWindow, &bb);
+
 	//ImGui初始化
 	ImGuiInit();
 
@@ -80,30 +88,15 @@ void Menu::CreateMenu()
 			DispatchMessage(&msg);
 		}
 		rect.GetRect();
-		HWND ForegroundWindow = GetForegroundWindow();
-		if (ForegroundWindow == game_hwnd || ForegroundWindow == hWindow)
-		{
-			SetWindowPos(hWindow, HWND_TOPMOST,
-				rect.x, rect.y, rect.width, rect.height,
-				SWP_SHOWWINDOW);
-		}
-		else
-		{
-			SetWindowPos(hWindow, HWND_BOTTOM,
-				rect.x, rect.y, rect.width, rect.height,
-				SWP_SHOWWINDOW);
-		}
+		SetWindowPos(hWindow, HWND_TOPMOST,
+			rect.x, rect.y, rect.width, rect.height,SWP_SHOWWINDOW);
 		MoveWindow(hWindow, rect.x,rect.y, rect.width,rect.height, true);
 
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		if(ImGui::Begin("11111111"))
-		{
-			
-		}ImGui::End();
-
+		drawMenu::get()->Execute();
 
 		ImGui::Render();
 		g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
@@ -152,7 +145,7 @@ void Menu::WindowInit()
 	hWindow = CreateWindowEx(
 		WS_EX_LAYERED | WS_EX_TOPMOST,
 		wc.lpszClassName, " ", 
-		WS_POPUP | WS_VISIBLE,
+		WS_POPUP | WS_VISIBLE | WS_EX_TRANSPARENT,
 		rect.x, rect.y,rect.width,rect.height,
 		nullptr, nullptr, wc.hInstance, &wc
 	);
@@ -162,11 +155,11 @@ void Menu::ImGuiInit() const
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	io.WantSaveIniSettings = false;
-	io.IniFilename = nullptr;
+	Renderer::get()->io = ImGui::GetIO();
+	Renderer::get()->io.WantSaveIniSettings = false;
+	Renderer::get()->io.IniFilename = nullptr;
 
-	ImGui::StyleColorsLight();
+	Renderer::SetStyle();
 	ImGui_ImplWin32_Init(hWindow);
 	ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 }

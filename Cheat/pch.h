@@ -6,6 +6,8 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
 #include <Windows.h>
+#include <functional>
+#include <dwmapi.h>
 #include <thread>
 
 //D3D
@@ -17,3 +19,4 @@
 #include "../ImGui/imgui_impl_win32.h"
 
 #include "../Common/framework.h"
+#include "../util/framework.h"
