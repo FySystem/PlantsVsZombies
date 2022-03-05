@@ -27,6 +27,9 @@ private:
 	//打开菜单
 	void CreateMenu();
 
+	//主要绘制 
+	void MainDraw();
+
 	//窗口初始化
 	void WindowInit();
 

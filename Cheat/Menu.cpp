@@ -56,6 +56,7 @@ void Menu::CreateMenu()
 	if (!CreateDeviceD3D(hWindow))
 	{
 		CleanupDeviceD3D();
+		OutputDebugStringEx("打开D3D设备失败\r\n");
 		::UnregisterClass(wc.lpszClassName, wc.hInstance);
 		ExitProcess(1);
 	}
@@ -69,7 +70,7 @@ void Menu::CreateMenu()
 
 	// imgui窗口透明，也可以解决D3D绘制锯齿
 	DWM_BLURBEHIND bb = { 0 };
-	HRGN hRgn = CreateRectRgn(0, 0, -1, -1);
+	const HRGN hRgn = CreateRectRgn(0, 0, -1, -1);
 	bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
 	bb.hRgnBlur = hRgn;
 	bb.fEnable = TRUE;
@@ -78,9 +79,15 @@ void Menu::CreateMenu()
 	//ImGui初始化
 	ImGuiInit();
 
+	//绘制
+	MainDraw();
+}
+
+void Menu::MainDraw()
+{
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
-	while(msg.message != WM_QUIT)
+	while (msg.message != WM_QUIT)
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
@@ -89,8 +96,8 @@ void Menu::CreateMenu()
 		}
 		rect.GetRect();
 		SetWindowPos(hWindow, HWND_TOPMOST,
-			rect.x, rect.y, rect.width, rect.height,SWP_SHOWWINDOW);
-		MoveWindow(hWindow, rect.x,rect.y, rect.width,rect.height, true);
+			rect.x, rect.y, rect.width, rect.height, SWP_SHOWWINDOW);
+		MoveWindow(hWindow, rect.x, rect.y, rect.width, rect.height, true);
 
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
