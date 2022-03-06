@@ -7,6 +7,6 @@
 
 ## 实现功能
 <p>外部绘制</p>
-<p>地址Hook取值</p>
+<p>用inlineHook地址得到寄存器的方式取值</p>
 
 <img src="image/1.png" alt="效果图"><br>
