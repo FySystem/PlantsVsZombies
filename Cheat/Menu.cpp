@@ -142,7 +142,7 @@ void Menu::MainDraw()
 		newGetZombieAddress[5] = '\x90';
 		newGetZombieAddress[6] = '\x90';
 
-		//测试写入
+		//测试 写入已经被修改的代码覆盖原本的 (这里需要优化用 WriteProcessMemory 不实际)
 		WriteProcessMemory(
 			GetCurrentProcess(),
 			reinterpret_cast<LPVOID>(0x0052D9E1), newGetZombieAddress, 
