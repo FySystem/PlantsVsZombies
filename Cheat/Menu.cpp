@@ -102,7 +102,7 @@ float fTest;
 void Test()
 {
 	if (ImGui::BeginChild(u8"Õ∏ ”", ImVec2(0, 0), true)) {
-		ImGui::SliderFloat(u8"Test",0,1000,fTest);
+		ImGui::SliderFloat(u8"Test", &fTest,0,1000);
 	}ImGui::EndChild();
 }
 
@@ -113,9 +113,9 @@ void Menu::MainDraw()
 
 	BYTE oldGetZombieAddress[7];
 	BYTE newGetZombieAddress[7];
-	std::set<uintptr_t> Zomibe;
+	const std::set<uintptr_t> zomibe;
 
-	//drawMenu::get()->visuals_tab_window = Test;
+	drawMenu::get()->visuals_tab_window = Test;
 
 	while (msg.message != WM_QUIT)
 	{
@@ -136,9 +136,10 @@ void Menu::MainDraw()
 		drawMenu::get()->Execute();
 
 		//≤‚ ‘
-		memcpy(&oldGetZombieAddress, LPVOID(0x0052D9E1), sizeof(oldGetZombieAddress));
+		memcpy(&oldGetZombieAddress, reinterpret_cast<void const*>(0x0052D9E1), sizeof(oldGetZombieAddress));
 		newGetZombieAddress[0] = '\xE9';
-		*(DWORD*)(newGetZombieAddress + 1) = (DWORD)GetZombieAddr - (DWORD)0x0052D9E1 - 5;
+		*reinterpret_cast<uintptr_t*>(newGetZombieAddress + 1) = reinterpret_cast<uintptr_t>(GetZombieAddr) - 0x0052D9E1 - 5;
+
 		newGetZombieAddress[5] = '\x90';
 		newGetZombieAddress[6] = '\x90';
 
@@ -162,7 +163,7 @@ void Menu::MainDraw()
 
 
 		ImGui::Render();
-		g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
+		g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
 		ImVec4 clearColor = ImGui::ColorConvertU32ToFloat4(ImColor(0, 0, 0, 0));
 		g_pd3dDeviceContext->ClearRenderTargetView(
 			g_mainRenderTargetView,reinterpret_cast<const float*>(&clearColor)
