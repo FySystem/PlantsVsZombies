@@ -14,6 +14,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
         //绘制菜单
         Menu::get()->Execute();
+
+        //读写数据
+        Infomation::get()->Execute();
+
         break;
     case DLL_PROCESS_DETACH:
 

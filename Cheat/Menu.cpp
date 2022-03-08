@@ -83,39 +83,10 @@ void Menu::CreateMenu()
 	MainDraw();
 }
 
-uintptr_t temp = 0;
-uintptr_t JmpBack = 0x0052D9E8; //后台运行跳转回去地址
-__declspec(naked)
-void GetZombieAddr() {
-	
-	__asm {
-		fld dword ptr[ecx + 0x2C]
-		push edi
-		fisub[ecx + 0x08]
-
-		mov temp, ecx
-
-		jmp JmpBack
-	}
-}
-float fTest;
-void Test()
-{
-	if (ImGui::BeginChild(u8"透视", ImVec2(0, 0), true)) {
-		ImGui::SliderFloat(u8"Test", &fTest,0,1000);
-	}ImGui::EndChild();
-}
-
 void Menu::MainDraw()
 {
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
-
-	BYTE oldGetZombieAddress[7];
-	BYTE newGetZombieAddress[7];
-	const std::set<uintptr_t> zombie;
-
-	drawMenu::get()->visuals_tab_window = Test;
 
 	while (msg.message != WM_QUIT)
 	{
@@ -133,36 +104,11 @@ void Menu::MainDraw()
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
+		//绘制菜单
 		drawMenu::get()->Execute();
 
-		//测试 这里都是测试代码 后面需要放到其他地方去
-		{
-			memcpy(&oldGetZombieAddress, reinterpret_cast<void const*>(0x0052D9E1), sizeof(oldGetZombieAddress));
-			newGetZombieAddress[0] = '\xE9';
-			*reinterpret_cast<uintptr_t*>(newGetZombieAddress + 1) = reinterpret_cast<uintptr_t>(GetZombieAddr) - 0x0052D9E1 - 5;
-
-			newGetZombieAddress[5] = '\x90';
-			newGetZombieAddress[6] = '\x90';
-
-			//测试 写入已经被修改的代码覆盖原本的 (这里需要优化用 WriteProcessMemory 不实际)
-			WriteProcessMemory(
-				GetCurrentProcess(),
-				reinterpret_cast<LPVOID>(0x0052D9E1), newGetZombieAddress,
-				sizeof(newGetZombieAddress), nullptr
-			);
-
-			//if (temp)
-			//{
-			//	Zomibe.insert(temp);
-			//	//Global::get()->Zombie.push_back(temp);
-			//}
-
-			//for (const auto& it : Zomibe)
-			//{
-			//	Memory::Write<float>(it + 0x2C, 800);
-			//}
-
-		}
+		//绘制Esp
+		Esp::get()->Execute();
 
 		ImGui::Render();
 		g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
